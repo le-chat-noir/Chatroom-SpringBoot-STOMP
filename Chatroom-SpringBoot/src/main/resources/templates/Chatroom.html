@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>聊天室</title>
+    <script src="js/sockjs-0.3.4.js"></script>
+    <script src="js/stomp.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<style type="text/css">
+* { margin: 0px auto; }
+ul,li { padding:0; margin:0; }
+ul { list-style:none; }
+#chat-room { width: 800px; margin-top: 50px;}
+#chat-room .lefter { float:left; width:200px; height:600px; border:1px solid #ccc; overflow: hidden; }
+#chat-room .lefter h2 { background:black; color:white; border-bottom:1px solid #eee; font-size:18px; line-height:30px; text-align:center; font-weight: bold;}
+#chat-room .lefter ul { overflow-y:auto; height: 569px; }
+#chat-room .lefter ul li {  padding:10px; font-weight:bold; font-size: 14px;}
+#chat-room .lefter .self{ background-color: lightgray; }
+#chat-room .lefter .users{ background-color: lightpink;}
+.spacer { height:8px; overflow:hidden; }
+#chat-room .righter { float:right;   width:550px; display:inline; margin:5px; }
+#chat-room .righter #chatHistory { height:460px; border:1px solid #ccc; padding:5px; overflow-y:scroll;}
+#chat-room #sysMessage {font-size: 16px; font-weight: bolder; line-height: 26px;}
+#chat-room .righter .reply .text { border:1px solid #ccc; width:380px; margin-right:5px; padding:4px; vertical-align:middle; font-size: 20px;}
+#chat-room .righter .reply label { vertical-align:middle; font-size: 20px;}
+#chat-room .righter .mySpeaks { clear:both; float : right;}
+#chat-room .righter .mySpeaksMsg { border-radius: 10px; background-color: lightgreen; font-size: 16px; padding: 5px 10px 5px 10px;}
+#chat-room .righter .errorSpeaks { clear:both; float: right;display:inline; border-radius: 10px; background-color: red; color:white; font-size: 16px; padding: 5px 10px 5px 10px; margin-bottom: 10px;}
+#chat-room .righter .otherSpeaks { clear:both; float: left;}
+#chat-room .righter .otherSpeaksMsg { border-radius: 10px; background-color: lightgray; font-size: 16px; padding: 5px 10px 5px 10px;}
+#chat-room .righter .timeStamp { vertical-align: bottom; font-size: 10px; color: gray}
+#sendMsg { background:#8a9cc2; border:1px solid #29447e; font-size: 20px; padding: 3px; color: white; font-weight: bold;}
+#sendImg { background:darkgreen; border:1px solid #29447e; font-size: 16px; padding: 3px; color: white; font-weight: bold;}
+#cancelImg { font-size: 16px;}
+#uploadedImg {font-size: 16px;}
+</style>
+</head>
+<body onload="connect();">
+	<div id="chat-room">
+		<div class="lefter">
+			<h2>聊天室目前成員</h2>
+			<ul id="userlist"></ul>
+		</div>
+		
+		<div class="righter">
+		
+			<div id="chatHistory"></div>
+			
+			<div class="spacer"></div>
+			<div><span id="sysMessage"></span></div>
+			
+			<div class="reply">
+				<input id="username" hidden="hidden" th:value="${session.chatName}" type="text"/>
+				<span class="sernTo"></span><select id="toUser"></select><div></div>
+				<input type="text" class="text" id="sendMessage" name="content" />
+				<input type="button" id="sendMsg" value="送出文字"  onclick="sendMsg();"/><br>
+				傳送圖片: <input id="uploadedImg" type="file" name="uploadedImg" accept="image/*"> 
+				<input id="cancelImg" type="button" value="取消" onclick="$('#uploadedImg').val('');">
+				<input id="sendImg" type="button" value="傳圖" onclick="sendImg();"><br>
+				<div><span id="imgError"></span></div>
+			</div>
+		</div>
+	</div>
+
+<script type="text/javascript">
+	var stompClient = null;
+	var userName = $("#username").val();
+
+	function connect() {
+    	var socket = new SockJS('/chatroom');
+    	stompClient = Stomp.over(socket);
+
+	    stompClient.connect({user:userName}, function(frame) {
+        	console.log('Connected: ' + frame);
+
+        	// 訊息廣播
+        	stompClient.subscribe('/topic/messages', function(message) {
+            	showMessage(JSON.parse(message.body));
+        	});
+
+			// Use broadcast to update list
+        	stompClient.subscribe('/topic/userList', function(message) {
+        		console.log("Someone refresh the userList!!!");
+				//console.log(message);
+            	updateUserList(message);
+        	});
+
+        	// 私人訊息
+        	stompClient.subscribe('/user/subscribe', function(message) {
+        		showPersonalMessage(JSON.parse(message.body));
+        	});
+        	// 連結成功後要求更新用戶列表
+        	stompClient.send("/app/userList", {}, JSON.stringify({'from':'', 'text':''}));
+        	$("#sysMessage").html("Hello, " + userName +" , WebSocket連線成功。")
+	    });
+
+	}
+
+	window.onbeforeunload = function () {
+		if(stompClient != null) {
+        	stompClient.disconnect();
+    	}
+	}
+	
+	// 傳送文字訊息
+	function sendMsg() {
+		if($("#sendMessage").val().trim() !=""){
+			var messageToSend = $("#sendMessage").val().replace("<", "&lt;").replace(">", "&gt;");
+			var myMessage = "";
+			if($("#toUser").val() == 0){
+				stompClient.send("/app/chat", {}, JSON.stringify({'from':userName, 'text':messageToSend}));
+				}else{
+				myMessage += "(私訊給 " + $("#toUser").val() + " ) ";
+				stompClient.send("/app/toUser", {}, JSON.stringify({'from':userName, 'text':messageToSend, 'target':$("#toUser").val()}));
+				}
+			myMessage += $("#sendMessage").val().replace("<", "&lt;").replace(">", "&gt;");
+			$("#sendMessage").val("");
+			var time = new Date();
+			var timeStamp = time.getMonth() + "/" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes();
+			$("#chatHistory").append("<table class='mySpeaks'><tr><td class='timeStamp'><p>" + timeStamp + "</p></td><td><p class='mySpeaksMsg'>我: " + myMessage + "</p></td></tr><table>");
+			updateScroll();
+		}
+	}
+
+	// 自動捲動對話
+	function updateScroll() {	
+		$("#chatHistory").scrollTop($("#chatHistory")[0].scrollHeight);					
+	}
+
+	// 更新使用者列表
+	function updateUserList(userListStr){
+		var userList = JSON.parse(userListStr.body);
+		console.log(userList.length);
+		console.log(userList);
+		var listStr = "";
+		var toUserStr = "<option value='0'>所有人</option>";
+		var userListTxt="";
+		for(let i=0;i<userList.length;i++){
+			if(userList[i].user != userName ) {
+				listStr += "<li class='users'>" + userList[i].user + "</li>";
+				toUserStr += "<option value='" + userList[i].user + "'>" + userList[i].user + "</option>";
+			}else {
+				// Do not add oneself to chat selection list, and highlight user
+	    		listStr += "<li class='self'>" + userList[i].user + "(自己)</li>";
+			}
+		}
+		$("#userlist").html(listStr);
+		if(!userName.includes("訪客")){
+			$("#toUser").html(toUserStr);	// Update selectable chat target
+			$(".sernTo").html("傳送給: ");
+		}else {
+			$("#toUser").html("<option value='0'>所有人</option>").attr("hidden", "hidden")
+		}
+	}
+	
+	// 顯示廣播訊息
+	function showMessage(message) {
+		if(message.message.from!=userName){
+		// add to resposne window
+    	if(message.message.img64==null){
+    		document.getElementById('chatHistory').innerHTML+= "<table class='otherSpeaks'><tr><td><p class='otherSpeaksMsg'>"+message.message.from+" 說: "+message.message.text+"</p></td><td class='timeStamp'><p>" + message.dateStr + "</p></td></tr><table>";
+    	}
+    	else{
+    		document.getElementById('chatHistory').innerHTML+= "<table class='otherSpeaks'><tr><td><p class='otherSpeaksMsg'>" + message.message.from + " 說: <img src='data:image/jpg;base64," + message.message.img64 + "' style='max-height: 200px; max-width: 200px; height:auto; width:auto';/></p></td><td class='timeStamp'><p>" + message.dateStr + "</p></td></tr><table>";
+    	}
+	    // scroll to bottom
+    	updateScroll();
+		}
+	}
+
+	// 顯示私訊
+	function showPersonalMessage(message) {
+		// add to resposne window
+    	if(message.message.img64==null){
+    		document.getElementById('chatHistory').innerHTML+= "<table class='otherSpeaks'><tr><td><p class='otherSpeaksMsg'>(私訊) " + message.message.from + " 跟你說: " + message.message.text+"</p></td><td class='timeStamp'><p>" + message.dateStr + "</p></td></tr><table>";
+    	}
+    	else{
+    		document.getElementById('chatHistory').innerHTML+= "<table class='otherSpeaks'><tr><td><p class='otherSpeaksMsg'>(私訊) " + message.message.from + " 跟你說: <img src='data:image/jpg;base64," + message.message.img64 + "' style='max-height: 200px; max-width: 200px; height:auto; width:auto';/></p></td><td class='timeStamp'><p>" + message.dateStr + "</p></td></tr><table>";
+    	}
+	    // scroll to bottom
+    	updateScroll();
+	}
+
+	// 傳送圖片訊息
+	function sendImg(){
+		// file size limit = 5MB
+		if($('#uploadedImg')[0].files[0].size < 524288000 && $('#uploadedImg')[0].files[0].type.includes("image")) {
+			$("#imgError").html("");
+		var formData = new FormData();
+		formData.append('uploadedImg', $('#uploadedImg')[0].files[0]);
+	 	$.ajax({
+	    	type: "POST",
+	        enctype: 'multipart/form-data',
+	        url: "img2base64",
+	        data: formData,
+	        processData: false, //防止jquery將data變成query String
+	        contentType: false, 
+	        cache: false,  //不做快取
+	        timeout: 2000, //設定傳輸的timeout,時間內沒完成則中斷
+	        success: function (data) {
+		        if(data!=null&&data!=""){
+					var dataStr=data.toString();
+					var myMessage = "";
+					if($("#toUser").val() != 0){
+						myMessage += "(私訊給 " + $("#toUser").val() + " ) ";
+						stompClient.send("/app/toUser", {}, JSON.stringify({'from':userName, 'img64':dataStr, 'target':$("#toUser").val()}));
+					}else{
+						stompClient.send("/app/chat", {}, JSON.stringify({'from':userName, 'img64':dataStr}));
+					}
+					$('#uploadedImg').val("");
+					var time = new Date();
+					var timeStamp = time.getMonth() + "/" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes();
+		    		$("#chatHistory").append("<table class='mySpeaks'><tr><td class='timeStamp'><p>" + timeStamp + "</p></td><td><p class='mySpeaksMsg'>我: <img src='data:image/jpg;base64," + dataStr + "' style='max-height: 200px; max-width: 200px; height:auto; width:auto';/></p></td></tr></table>");
+		    		updateScroll();
+		        }
+	        },
+	        error: function (e) {
+	            console.log("ERROR : ", e);
+	        }
+	 	})
+		}else{
+			$("#imgError").html("檔案太大或檔案類型錯誤");
+			$('#uploadedImg').val("");
+		}
+	}
+
+
+
+
+</script>
+
+</body>
+</html>
