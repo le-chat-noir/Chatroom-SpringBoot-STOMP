@@ -6,7 +6,7 @@
 
 	<groupId>com.stomp</groupId>
 	<artifactId>chatroom-spring-boot</artifactId>
-	<version>1.0</version>
+	<version>0.2</version>
 	<packaging>jar</packaging>
 
 	<properties>

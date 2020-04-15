@@ -3,18 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <title>[DEBUG用] Session Attribute Changer</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-<form action="createSession" method="get">
-<input type="text" name="debugName" required="required" default="Cat">
-<input type="submit" value="Create Session!!">
+<form id="myform" action="createSession" method="get">
+nickName:<input type="text" id="debugName" name="debugName" required="required" value="米克斯貓" onblur="checkUserNameDuplication();"><br>
+<input type="submit" value="Create Session!!"><br>
 </form>
 <input type="button" value="Destroy Session!!" onclick="destroySession();">
+<input type="text" id="guest" name="guest" hidden="hidden" value="(訪客)"><input type="text" id="check" hidden="hidden" value="false">
+<h3 id="chatRoomErrorMsg"></h3>
 
 <script type="text/javascript">
 	function destroySession() {
 		window.location.href= "destroySession";
 	}
+
+	function checkUserNameDuplication() {
+		var chatName = $("#debugName").val();
+		if($("#debugName").val().trim()!=""){
+			$.ajax({			
+				url: "checkUnique",
+				data: {chatName: chatName},
+				success: function(data) {
+					var result = eval(data);
+					if(result){
+						$("#check").val("true");
+						$("#chatRoomErrorMsg").html("暱稱可用")
+					}else {
+						$("#check").val("false");
+						$("#chatRoomErrorMsg").html("暱稱重複，請再換一個")
+					}
+				}
+			})
+		}
+	}
+
+	document.getElementById('myform').onsubmit=function(){
+		checkUserNameDuplication();
+		if($("#debugName").val().trim()=="" || $("#check").val()=="false")
+    		return false;
+    	return true;
+    }
 </script>
 </body>
 </html>

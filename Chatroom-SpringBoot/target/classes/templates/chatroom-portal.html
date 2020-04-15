@@ -21,6 +21,9 @@
 		<input type="text" id="guest" name="guest" hidden="hidden" value="(訪客)"><input type="text" id="check" name="check" hidden="hidden" value="false">
 		<h3 id="chatRoomErrorMsg"></h3>
 	</form>
+	<hr>
+	<div>!! DEBUG用 !!<br><a href="/DEBUG">--點這裡設定session，以註冊使用者登入--</a>
+	</div>
 	<script>
 		function checkUserNameDuplication() {
 			var chatName = $("#chatName").val()+$("#guest").val();

@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Implementation-Title: chatroom-spring-boot
-Implementation-Version: 1.0
+Implementation-Version: 0.2
 Built-By: Yuzuha
 Implementation-Vendor-Id: com.stomp
 Build-Jdk: 1.8.0_242

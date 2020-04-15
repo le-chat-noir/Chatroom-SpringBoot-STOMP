@@ -60,4 +60,12 @@ public class PageController {
 		request.getSession().setAttribute("chatName", request.getParameter("debugName"));
 		return "Chatroom";
 	}
+	
+	// DEBUGGER
+	@RequestMapping(path = "/destroySession", method = RequestMethod.GET)
+	public String destroySession(HttpServletRequest request) {
+		request.getSession().invalidate();
+		return "Chatroom";
+	}
+	
 }
