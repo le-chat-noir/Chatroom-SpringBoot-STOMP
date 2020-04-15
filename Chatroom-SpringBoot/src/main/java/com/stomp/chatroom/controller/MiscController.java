@@ -22,23 +22,28 @@ import com.stomp.chatroom.websocket.WebSocketSessions;
 
 @RestController
 public class MiscController {
+	
+	// Picture resize max length
+	private static final int picLength = 200;
+	
 	@Autowired
 	private WebSocketSessions sessions; 
+	
 	
 	@SuppressWarnings("deprecation")
 	@PostMapping("/img2base64")
 	public String addData(@RequestParam("uploadedImg") MultipartFile imgPartFile, HttpServletResponse response, Model model) throws Exception {
-		if(imgPartFile.getContentType().contains("image")&&imgPartFile.getSize()<524288000) {
+		if(imgPartFile.getContentType().contains("image")&&imgPartFile.getSize() < 524288000) {
 			// Print DEBUG
 			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] File uploaded, type: " + imgPartFile.getContentType() + " | size: " + imgPartFile.getSize() + " [MiscController.java]");
 			
-			// Resize image to less than 200px * 200px
+			// Resize image to less than picLength (px)
 			BufferedImage sourceImage = ImageIO.read(imgPartFile.getInputStream());
 			Image thumbnail = null;
 			if(sourceImage.getHeight()>sourceImage.getWidth()) {
-				thumbnail = sourceImage.getScaledInstance(-1, 200, Image.SCALE_SMOOTH);
+				thumbnail = sourceImage.getScaledInstance(-1, picLength, Image.SCALE_SMOOTH);
 			}else {
-				thumbnail = sourceImage.getScaledInstance(200, -1, Image.SCALE_SMOOTH);
+				thumbnail = sourceImage.getScaledInstance(picLength, -1, Image.SCALE_SMOOTH);
 			}
 			BufferedImage bufferedThumbnail = new BufferedImage(thumbnail.getWidth(null), thumbnail.getHeight(null), BufferedImage.TYPE_INT_RGB);
 			bufferedThumbnail.getGraphics().drawImage(thumbnail, 0, 0, null);

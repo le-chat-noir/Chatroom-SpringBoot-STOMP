@@ -1,7 +1,6 @@
 package com.stomp.chatroom.controller;
 
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -25,20 +24,26 @@ public class ChatController {
 
 	@Autowired
 	private MsgTemplate template;
+	
 
 	// Handle message broadcast from users
 	
 	@MessageMapping("/chat")
 	public void sendMsg(final Message message) throws Exception {
-		// Print DEBUG
-		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
+		if(message.getImg64()==null&&(message.getText()==null||message.getText()=="")) {
+			// Print DEBUG
+			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast empty message, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
+		}else {
+			// Print DEBUG
+			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
 
-		// Generate time stamp
-		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
-		final String time = dateFormat.format(new Date());
+			// Generate time stamp
+			SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
+			final String time = dateFormat.format(new Date());
 
-		// Send message + time stamp
-		template.sendMsgTo(MsgTemplate.BROADCAST_DESTINATION, new OutputMessage(time, message));
+			// Send message + time stamp
+			template.sendMsgTo(MsgTemplate.BROADCAST_DESTINATION, new OutputMessage(time, message));
+		}
 	}
 
 	@MessageMapping("/userList")
@@ -84,5 +89,6 @@ public class ChatController {
 		}
 
 	}
+	
 
 }

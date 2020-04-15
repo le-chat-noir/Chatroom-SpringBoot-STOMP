@@ -36,6 +36,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	/**
 	 * 收到連線建立時做的處理
 	 */
+	// Required for to-specific-user message
+	// Intercept for getting user sessionId and conversion from header
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(new ChannelInterceptor() {
@@ -44,7 +46,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 				StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
 				if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-					// String user = accessor.getNativeHeader("user").get(0);
 					accessor.setUser(new UserPrincipal(accessor.getSessionId()));
 				}
 				return message;

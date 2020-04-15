@@ -34,6 +34,7 @@ ul { list-style:none; }
 #sendImg { background:darkgreen; border:1px solid #29447e; font-size: 16px; padding: 3px; color: white; font-weight: bold;}
 #cancelImg { font-size: 16px;}
 #uploadedImg {font-size: 16px;}
+#imgError {color: red;}
 </style>
 </head>
 <body onload="connect();">
@@ -48,7 +49,7 @@ ul { list-style:none; }
 			<div id="chatHistory"></div>
 			
 			<div class="spacer"></div>
-			<div><span id="sysMessage"></span></div>
+			<div><span id="sysMessage">WebSocket未連線...</span></div>
 			
 			<div class="reply">
 				<input id="username" hidden="hidden" th:value="${session.chatName}" type="text"/>
@@ -58,7 +59,8 @@ ul { list-style:none; }
 				傳送圖片: <input id="uploadedImg" type="file" name="uploadedImg" accept="image/*"> 
 				<input id="cancelImg" type="button" value="取消" onclick="$('#uploadedImg').val('');">
 				<input id="sendImg" type="button" value="傳圖" onclick="sendImg();"><br>
-				<div><span id="imgError"></span></div>
+				<div><p id="imgError"></p></div><br>
+				<div><p>圖片大小限5MB，圖片會自動壓縮至最大邊長200px</p></div>
 			</div>
 		</div>
 	</div>
@@ -66,12 +68,21 @@ ul { list-style:none; }
 <script type="text/javascript">
 	var stompClient = null;
 	var userName = $("#username").val();
+	var sessionId = "";
 
 	function connect() {
     	var socket = new SockJS('/chatroom');
     	stompClient = Stomp.over(socket);
 
 	    stompClient.connect({user:userName}, function(frame) {
+	    	var url = stompClient.ws._transport.url;
+	        url = url.replace(
+	          "ws://localhost:8080/app/chatroom",  "");
+	        url = url.replace("/websocket", "");
+	        url = url.replace(/^[0-9]+\//, "");
+	        console.log("Your current session is: " + url);
+	        sessionId = url;
+		    
         	console.log('Connected: ' + frame);
 
         	// 訊息廣播
