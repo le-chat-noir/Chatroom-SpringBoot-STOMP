@@ -35,7 +35,7 @@ public class ChatController {
 			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast empty message, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
 		}else {
 			// Print DEBUG
-			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
+			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64().substring(0, 20) + " [ChatController.java]");
 
 			// Generate time stamp
 			SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
@@ -68,7 +68,9 @@ public class ChatController {
 	public void sendUserMsg(final Message message) throws Exception {
 		// Print DEBUG
 		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] user:" + message.getFrom() + " sends message to target: " + message.getTarget() + " [ChatController.java]");
+		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] message text: " + message.getText() + " | img64: " + message.getImg64().substring(0, 20) + " [ChatController.java]");
 
+		
 		// Generate time stamp
 		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
 		final String time = dateFormat.format(new Date());

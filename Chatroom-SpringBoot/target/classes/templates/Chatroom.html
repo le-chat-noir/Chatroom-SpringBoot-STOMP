@@ -198,38 +198,42 @@ ul { list-style:none; }
 		// file size limit = 5MB
 		if($('#uploadedImg')[0].files[0].size < 524288000 && $('#uploadedImg')[0].files[0].type.includes("image")) {
 			$("#imgError").html("");
-		var formData = new FormData();
-		formData.append('uploadedImg', $('#uploadedImg')[0].files[0]);
-	 	$.ajax({
-	    	type: "POST",
-	        enctype: 'multipart/form-data',
-	        url: "img2base64",
-	        data: formData,
-	        processData: false, //防止jquery將data變成query String
-	        contentType: false, 
-	        cache: false,  //不做快取
-	        timeout: 2000, //設定傳輸的timeout,時間內沒完成則中斷
-	        success: function (data) {
-		        if(data!=null&&data!=""){
-					var dataStr=data.toString();
-					var myMessage = "";
-					if($("#toUser").val() != 0){
-						myMessage += "(私訊給 " + $("#toUser").val() + " ) ";
-						stompClient.send("/app/toUser", {}, JSON.stringify({'from':userName, 'img64':dataStr, 'target':$("#toUser").val()}));
-					}else{
-						stompClient.send("/app/chat", {}, JSON.stringify({'from':userName, 'img64':dataStr}));
+			var formData = new FormData();
+			formData.append('uploadedImg', $('#uploadedImg')[0].files[0]);
+			$('#sendImg').val("傳送中").attr("disabled","disabled").css("background-color", "lightgreen");
+	 		$.ajax({
+				type: "POST",
+				enctype: 'multipart/form-data',
+				url: "img2base64",
+				data: formData,
+				processData: false, //防止jquery將data變成query String
+				contentType: false, 
+				cache: false,  //不做快取
+				timeout: 20000, //設定傳輸的timeout,時間內沒完成則中斷, ngrok慢到靠杯所以設定20秒
+				success: function (data) {
+					if(data!=null&&data!=""){
+						var dataStr=data.toString();
+						var myMessage = "";
+						if($("#toUser").val() != 0){
+							myMessage += "(私訊給 " + $("#toUser").val() + " ) ";
+							stompClient.send("/app/toUser", {}, JSON.stringify({'from':userName, 'img64':dataStr, 'target':$("#toUser").val()}));
+						}else{
+							stompClient.send("/app/chat", {}, JSON.stringify({'from':userName, 'img64':dataStr}));
+						}
+						$('#uploadedImg').val("");
+						var time = new Date();
+						var timeStamp = time.getMonth() + "/" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes();
+		    			$("#chatHistory").append("<table class='mySpeaks'><tr><td class='timeStamp'><p>" + timeStamp + "</p></td><td><p class='mySpeaksMsg'>我: <img src='data:image/jpg;base64," + dataStr + "' style='max-height: 200px; max-width: 200px; height:auto; width:auto';/></p></td></tr></table>");
+		    			updateScroll();
+		    			$('#sendImg').val("傳圖").removeAttr("disabled").css("background-color", "darkgreen");
 					}
-					$('#uploadedImg').val("");
-					var time = new Date();
-					var timeStamp = time.getMonth() + "/" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes();
-		    		$("#chatHistory").append("<table class='mySpeaks'><tr><td class='timeStamp'><p>" + timeStamp + "</p></td><td><p class='mySpeaksMsg'>我: <img src='data:image/jpg;base64," + dataStr + "' style='max-height: 200px; max-width: 200px; height:auto; width:auto';/></p></td></tr></table>");
-		    		updateScroll();
-		        }
-	        },
-	        error: function (e) {
-	            console.log("ERROR : ", e);
-	        }
-	 	})
+				},
+				error: function (e) {
+					$('#sendImg').val("傳圖").removeAttr("disabled").css("background-color", "darkgreen");
+					console.log("ERROR : ", e);
+					$("#imgError").html("傳送失敗...");
+				}
+			})
 		}else{
 			$("#imgError").html("檔案太大或檔案類型錯誤");
 			$('#uploadedImg').val("");
