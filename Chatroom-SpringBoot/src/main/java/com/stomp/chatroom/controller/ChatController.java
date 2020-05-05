@@ -24,21 +24,20 @@ public class ChatController {
 
 	@Autowired
 	private MsgTemplate template;
-	
 
 	// Handle message broadcast from users
-	
+
 	@MessageMapping("/chat")
 	public void sendMsg(final Message message) throws Exception {
-		if(message.getImg64()==null&&(message.getText()==null||message.getText()=="")) {
+		if (message.getImg64() == null && (message.getText() == null || message.getText() == "")) {
 			// Print DEBUG
 			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast empty message, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
-		}else {
+		} else {
 			// Print DEBUG
-			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64().substring(0, 20) + " [ChatController.java]");
+			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] User Broadcast, text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
 
 			// Generate time stamp
-			SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
+			SimpleDateFormat dateFormat = new SimpleDateFormat("M/d HH:mm");
 			final String time = dateFormat.format(new Date());
 
 			// Send message + time stamp
@@ -50,8 +49,7 @@ public class ChatController {
 	@SendTo(MsgTemplate.USERLIST_DESTINATION)
 	public String updateUserList() throws Exception {
 		// Print DEBUG
-		System.out.println(
-				"[DEBUG] [" + new Date().toLocaleString() + "] New user request for user lists. [ChatController.java]");
+		System.out.println("[INFO] [" + new Date().toLocaleString() + "] New user request for user lists. [ChatController.java]");
 
 		// Construct user list
 		JSONArray jArray = new JSONArray();
@@ -68,11 +66,10 @@ public class ChatController {
 	public void sendUserMsg(final Message message) throws Exception {
 		// Print DEBUG
 		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] user:" + message.getFrom() + " sends message to target: " + message.getTarget() + " [ChatController.java]");
-		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] message text: " + message.getText() + " | img64: " + message.getImg64().substring(0, 20) + " [ChatController.java]");
+		System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] message text: " + message.getText() + " | img64: " + message.getImg64() + " [ChatController.java]");
 
-		
 		// Generate time stamp
-		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("M/d HH:mm");
 		final String time = dateFormat.format(new Date());
 
 		String sender = message.getFrom();
@@ -81,8 +78,7 @@ public class ChatController {
 			template.sendMsgToUser(target, new OutputMessage(time, message));
 		} else {
 			// Print DEBUG
-			System.out.println("[DEBUG] [" + new Date().toLocaleString()
-					+ "] guest trying to send private message. [ChatController.java]");
+			System.out.println("[DEBUG] [" + new Date().toLocaleString() + "] guest trying to send private message. [ChatController.java]");
 
 			Message sysMsg = new Message();
 			sysMsg.setFrom("SYSTEM");
@@ -91,6 +87,5 @@ public class ChatController {
 		}
 
 	}
-	
 
 }

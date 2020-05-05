@@ -31,7 +31,7 @@ public class STOMPConnectEventListener implements ApplicationListener<SessionCon
 		String sessionId = accessor.getSessionId();
 		sessions.registerSessionId(user, sessionId);
 
-		System.out.println("[DEBUG] ["+ new Date().toLocaleString() + "] User joins connection pool [STOMPConnectEventListener.java]");
+		System.out.println("[INFO] ["+ new Date().toLocaleString() + "] User joins connection pool [STOMPConnectEventListener.java]");
 
 		// This part is temporarily disabled, user list update will be perform upon new user join and initiated by user
 		// Otherwise new join user will not receive this broadcast

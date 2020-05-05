@@ -3,7 +3,7 @@ Implementation-Title: chatroom-spring-boot
 Implementation-Version: 0.2
 Built-By: Yuzuha
 Implementation-Vendor-Id: com.stomp
-Build-Jdk: 1.8.0_242
+Build-Jdk: 1.8.0_252
 Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
  ot-starter-parent/chatroom-spring-boot
 Created-By: Maven Integration for Eclipse

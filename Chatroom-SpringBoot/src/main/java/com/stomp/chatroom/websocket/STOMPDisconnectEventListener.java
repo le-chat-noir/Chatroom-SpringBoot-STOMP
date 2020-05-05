@@ -32,7 +32,7 @@ public class STOMPDisconnectEventListener implements ApplicationListener<Session
 		sessions.removeSessionId(sessionId);
 
 		// Print DEBUG
-		System.out.println("[DEBUG] ["+ new Date().toLocaleString() + "] User leaved connection pool [STOMPDisconnectEventListener.java]");
+		System.out.println("[INFO] ["+ new Date().toLocaleString() + "] User leaved connection pool [STOMPDisconnectEventListener.java]");
 
 		// Construct JSON
 		JSONArray jArray = new JSONArray();
